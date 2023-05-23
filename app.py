@@ -5,9 +5,15 @@ import sklearn
 import os
 import pickle
 import warnings
+from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app)
+@app.before_request
+def before_request():
+    if request.method == 'POST' and request.headers['Content-Type'] != 'application/json':
+        return jsonify(message='Invalid Content-Type'), 400
 loaded_model = pickle.load(open("model.pkl", 'rb'))
 
 
@@ -18,13 +24,22 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    N = int(request.form['Nitrogen'])
-    P = int(request.form['Phosporus'])
-    K = int(request.form['Potassium'])
-    temp = float(request.form['Temperature'])
-    humidity = float(request.form['Humidity'])
-    ph = float(request.form['pH'])
-    rainfall = float(request.form['Rainfall'])
+   ## N = int(request.form['Nitrogen'])
+    ##P = int(request.form['Phosporus'])
+   ## K = int(request.form['Potassium'])
+    ##temp = float(request.form['Temperature'])
+    ##humidity = float(request.form['Humidity'])
+    ##ph = float(request.form['pH'])
+    ##rainfall = float(request.form['Rainfall'])
+    data = request.get_json()
+    N = int(data['Nitrogen'])
+    P = int(data['Phosporus'])
+    K = int(data['Potassium'])
+    temp = float(data['Temperature'])
+    humidity = float(data['Humidity'])
+    ph = float(data['pH'])
+    rainfall = float(data['Rainfall'])
+
 
     feature_list = [N, P, K, temp, humidity, ph, rainfall]
     single_pred = np.array(feature_list).reshape(1, -1)
@@ -42,7 +57,8 @@ def predict():
     else:
         result = "Sorry, we could not determine the best crop to be cultivated with the provided data."
 
-    return render_template('home.html', prediction=result)
+    ##return render_template('home.html', prediction=result)
+    return jsonify({'prediction': result})
 
 
 if __name__ == '__main__':
